@@ -2,6 +2,7 @@ import board
 import digitalio
 import analogio
 import config
+import math
 
 Led = digitalio.DigitalInOut(board.GP14)
 Led.direction = digitalio.Direction.OUTPUT
@@ -17,10 +18,12 @@ Button.pull = digitalio.Pull.UP
 rfLevel = analogio.AnalogIn(board.GP26)
 batLevel = analogio.AnalogIn(board.GP27)
 
+def myround(x, base=10):
+    return base * round(x/base)
 
 def batery_voltage():
-    #return batLevel.value / 65535 * batLevel.reference_voltage
-    return (batLevel.value*2) / 65535 * 4.3
+    return ((batLevel.value / 65535 * batLevel.reference_voltage)*2)
+
 
 def rf_millivoltage():
     return (rfLevel.value / 65535 * rfLevel.reference_voltage)*100
@@ -28,7 +31,11 @@ def rf_millivoltage():
 
 def batPCT():
     #return str(round(((65535/batLevel.value)*100),0))+"%"
-    return '{message: <4}'.format(message=str(round(batery_voltage() / 3.3) * 100)+"%")
+    if (batery_voltage()-3 < 0):
+        return '{message: <4}'.format(message="USB")
+    else:
+        return '{message: <4}'.format(message=str(myround(((batery_voltage()-2) / 1.4) * 100, 10))+"%")
+
 
 
 # 10dB accuracy
@@ -36,32 +43,15 @@ def rfDbWideband():
     # reference mv/dB
     mvDb=25
     # all things dB
-    offsetdB=-100
-    transformerGain=12
-    widebandLoss=-3
+    offsetdB=-92 # Dynamic range
+    transformerGain=12 # UNUN
+    widebandLoss=-3 # from 0-500Mhz
 
     inputDb=rf_millivoltage()/mvDb
-    returnValue=inputDb+transformerGain+widebandLoss+offsetdB+config.antennaGainWideband
-    return '{message: <13}'.format(message=str(round(returnValue,2))+" dB")
+    dBm=inputDb+transformerGain+widebandLoss+offsetdB+config.antennaGainWideband
+    #dbuV=dBm+107
+    #returnValue=10*(((dbuV/1)-120/20))
+    return '{message: <13}'.format(message=str(round(dBm,2))+" dBm")
 
-def batLevel():
-    if batery_voltage() > 4.1:
-        return '100%'
-    elif batery_voltage() > 4:
-        return ' 90%'
-    elif batery_voltage() > 3.9:
-        return ' 80%'
-    elif batery_voltage() > 3.8:
-        return ' 60%'
-    elif batery_voltage() > 3.7:
-        return ' 50%'
-    elif batery_voltage() > 3.6:
-        return ' 40%'
-    elif batery_voltage() > 3.5:
-        return ' 30%'
-    elif batery_voltage() > 3.4:
-        return ' 20%'
-    elif batery_voltage() > 3.3:
-        return ' 10%'
-    elif batery_voltage() > 3:
-        return '  0%'
+
+# https://www.aaronia.com/fileadmin/media-archive/conversion_formulas.pdf

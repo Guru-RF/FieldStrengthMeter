@@ -11,10 +11,9 @@ FieldStrengthMeter.Led.value = False
 # - dB -> v/m (log press button) + calculation
 
 OLED.drawBattery()
-OLED.printMode("Wide 1-160Mhz")
+OLED.printMode("Wide 1-500Mhz")
 
 while True:
-    OLED.printMode(FieldStrengthMeter.batery_voltage())
     OLED.printBatPCT(FieldStrengthMeter.batPCT())
     OLED.printDb(FieldStrengthMeter.rfDbWideband())
     time.sleep(1)

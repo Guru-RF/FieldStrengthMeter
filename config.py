@@ -4,5 +4,5 @@ antennaGainVLF=-2
 antennaGainHF=-2
 # antenna gain in dB > 100 Mhz
 antennaGainVHF=-2
-# antenna gain Wideband (10dB accuracy)
+# antenna gain Wideband (1dB accuracy) till 150Mhz
 antennaGainWideband=-2
